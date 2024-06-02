@@ -223,9 +223,7 @@ func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKe
 
 		// set birthday block to 0 if we import an external account
 		bs := &waddrmgr.BlockStamp{
-			Hash:      *w.chainParams.GenesisHash,
-			Height:    0,
-			Timestamp: w.chainParams.GenesisBlock.Header.Timestamp,
+			Height: 481824,
 		}
 
 		return w.Manager.SetBirthdayBlock(ns, *bs, true)
@@ -258,9 +256,7 @@ func (w *Wallet) ImportAccountWithScope(name string,
 
 		// set birthday block to 0 if we import an external account
 		bs := &waddrmgr.BlockStamp{
-			Hash:      *w.chainParams.GenesisHash,
-			Height:    0,
-			Timestamp: w.chainParams.GenesisBlock.Header.Timestamp,
+			Height: 481824,
 		}
 
 		return w.Manager.SetBirthdayBlock(ns, *bs, true)
