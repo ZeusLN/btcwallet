@@ -217,7 +217,18 @@ func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKe
 		accountProps, err = w.importAccount(
 			ns, name, accountPubKey, masterKeyFingerprint, addrType,
 		)
-		return err
+		if err != nil {
+			return err
+		}
+
+		// set birthday block to 0 if we import an external account
+		bs := &waddrmgr.BlockStamp{
+			Hash:      *w.chainParams.GenesisHash,
+			Height:    0,
+			Timestamp: w.chainParams.GenesisBlock.Header.Timestamp,
+		}
+
+		return w.Manager.SetBirthdayBlock(ns, *bs, true)
 	})
 	return accountProps, err
 }
@@ -241,7 +252,18 @@ func (w *Wallet) ImportAccountWithScope(name string,
 			ns, name, accountPubKey, masterKeyFingerprint, keyScope,
 			&addrSchema,
 		)
-		return err
+		if err != nil {
+			return err
+		}
+
+		// set birthday block to 0 if we import an external account
+		bs := &waddrmgr.BlockStamp{
+			Hash:      *w.chainParams.GenesisHash,
+			Height:    0,
+			Timestamp: w.chainParams.GenesisBlock.Header.Timestamp,
+		}
+
+		return w.Manager.SetBirthdayBlock(ns, *bs, true)
 	})
 	return accountProps, err
 }
