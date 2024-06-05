@@ -238,6 +238,11 @@ func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKe
 			Timestamp: header.Timestamp,
 		}
 
+		err = w.Manager.SetSyncedTo(ns, bs)
+		if err != nil {
+			return err
+		}
+
 		return w.Manager.SetBirthdayBlock(ns, *bs, true)
 	})
 	return accountProps, err
@@ -281,6 +286,11 @@ func (w *Wallet) ImportAccountWithScope(name string,
 			Hash:      *chainHash,
 			Height:    height,
 			Timestamp: header.Timestamp,
+		}
+
+		err = w.Manager.SetSyncedTo(ns, bs)
+		if err != nil {
+			return err
 		}
 
 		return w.Manager.SetBirthdayBlock(ns, *bs, true)
