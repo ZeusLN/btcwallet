@@ -221,12 +221,23 @@ func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKe
 			return err
 		}
 
-		// set birthday block to 0 if we import an external account
-		bs := &waddrmgr.BlockStamp{
-			Height: 481824,
+		height := int32(481824)
+		chainHash, err := w.chainClient.GetBlockHash(int64(height))
+		if err != nil {
+			return err
+		}
+		header, err := w.chainClient.GetBlockHeader(chainHash)
+		if err != nil {
+			return err
 		}
 
-		return w.Manager.SetBirthdayBlock(ns, *bs, true)
+		bs := &waddrmgr.BlockStamp{
+			Hash:      *chainHash,
+			Height:    height,
+			Timestamp: header.Timestamp,
+		}
+
+		return w.Manager.SetBirthdayBlock(ns, *bs, false)
 	})
 	return accountProps, err
 }
@@ -254,12 +265,23 @@ func (w *Wallet) ImportAccountWithScope(name string,
 			return err
 		}
 
-		// set birthday block to 0 if we import an external account
-		bs := &waddrmgr.BlockStamp{
-			Height: 481824,
+		height := int32(481824)
+		chainHash, err := w.chainClient.GetBlockHash(int64(height))
+		if err != nil {
+			return err
+		}
+		header, err := w.chainClient.GetBlockHeader(chainHash)
+		if err != nil {
+			return err
 		}
 
-		return w.Manager.SetBirthdayBlock(ns, *bs, true)
+		bs := &waddrmgr.BlockStamp{
+			Hash:      *chainHash,
+			Height:    height,
+			Timestamp: header.Timestamp,
+		}
+
+		return w.Manager.SetBirthdayBlock(ns, *bs, false)
 	})
 	return accountProps, err
 }
