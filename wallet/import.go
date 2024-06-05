@@ -221,8 +221,7 @@ func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKe
 			return err
 		}
 
-		height := int32(481824)
-		chainHash, err := w.chainClient.GetBlockHash(int64(height))
+		chainHash, err := w.chainClient.GetBlockHash(int64(481824))
 		if err != nil {
 			return err
 		}
@@ -233,11 +232,11 @@ func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKe
 
 		bs := &waddrmgr.BlockStamp{
 			Hash:      *chainHash,
-			Height:    height,
+			Height:    481824,
 			Timestamp: header.Timestamp,
 		}
 
-		return w.Manager.SetBirthdayBlock(ns, *bs, false)
+		return w.Manager.SetBirthdayBlock(ns, *bs, true)
 	})
 	return accountProps, err
 }
@@ -281,7 +280,7 @@ func (w *Wallet) ImportAccountWithScope(name string,
 			Timestamp: header.Timestamp,
 		}
 
-		return w.Manager.SetBirthdayBlock(ns, *bs, false)
+		return w.Manager.SetBirthdayBlock(ns, *bs, true)
 	})
 	return accountProps, err
 }
