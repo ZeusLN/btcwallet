@@ -3193,9 +3193,10 @@ func (w *Wallet) NewAddress(account uint32,
 	}
 
 	job := &RescanJob{
-		Addrs:      []btcutil.Address{addr},
-		OutPoints:  nil,
-		BlockStamp: *bs,
+		InitialSync: true,
+		Addrs:       []btcutil.Address{addr},
+		OutPoints:   nil,
+		BlockStamp:  *bs,
 	}
 
 	// Submit rescan job and log when the import has completed.
