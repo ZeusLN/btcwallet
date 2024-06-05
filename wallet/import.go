@@ -238,7 +238,7 @@ func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKe
 			Timestamp: header.Timestamp,
 		}
 
-		err = w.Manager.SetSyncedTo(ns, bs)
+		err = w.Manager.SetSyncedTo(ns, nil)
 		if err != nil {
 			return err
 		}
@@ -288,7 +288,7 @@ func (w *Wallet) ImportAccountWithScope(name string,
 			Timestamp: header.Timestamp,
 		}
 
-		err = w.Manager.SetSyncedTo(ns, bs)
+		err = w.Manager.SetSyncedTo(ns, nil)
 		if err != nil {
 			return err
 		}
