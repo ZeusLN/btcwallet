@@ -3176,6 +3176,34 @@ func (w *Wallet) NewAddress(account uint32,
 
 	w.NtfnServer.notifyAccountProperties(props)
 
+	height := int32(800000)
+	chainHash, err := w.chainClient.GetBlockHash(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	header, err := w.chainClient.GetBlockHeader(chainHash)
+	if err != nil {
+		return nil, err
+	}
+
+	bs := &waddrmgr.BlockStamp{
+		Hash:      *chainHash,
+		Height:    height,
+		Timestamp: header.Timestamp,
+	}
+
+	job := &RescanJob{
+		Addrs:      []btcutil.Address{addr},
+		OutPoints:  nil,
+		BlockStamp: *bs,
+	}
+
+	// Submit rescan job and log when the import has completed.
+	// Do not block on finishing the rescan.  The rescan success
+	// or failure is logged elsewhere, and the channel is not
+	// required to be read, so discard the return value.
+	_ = w.SubmitRescan(job)
+
 	return addr, nil
 }
 
