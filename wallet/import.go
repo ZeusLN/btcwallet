@@ -544,26 +544,9 @@ func (w *Wallet) ImportPrivateKey(scope waddrmgr.KeyScope, wif *btcutil.WIF,
 		return "", err
 	}
 
-	// Rescan blockchain for transactions with txout scripts paying to the
-	// imported address.
-	if rescan {
-		job := &RescanJob{
-			Addrs:      []btcutil.Address{addr},
-			OutPoints:  nil,
-			BlockStamp: *bs,
-		}
-
-		// Submit rescan job and log when the import has completed.
-		// Do not block on finishing the rescan.  The rescan success
-		// or failure is logged elsewhere, and the channel is not
-		// required to be read, so discard the return value.
-		_ = w.SubmitRescan(job)
-	} else {
-		err := w.chainClient.NotifyReceived([]btcutil.Address{addr})
-		if err != nil {
-			return "", fmt.Errorf("failed to subscribe for address ntfns for "+
-				"address %s: %w", addr.EncodeAddress(), err)
-		}
+	err = w.maybeRescanAddr(rescan, addr, *bs)
+	if err != nil {
+		return "", err
 	}
 
 	addrStr := addr.EncodeAddress()
@@ -605,4 +588,32 @@ func (w *Wallet) maybeUpdateBirthdayBlock(
 	// unverified to prompt a sanity check at the next restart to
 	// ensure it is correct as it was provided by the caller.
 	return bs, w.Manager.SetBirthdayBlock(addrmgrNs, *bs, false)
+}
+
+// maybeRescanAddr submits a rescan job for `addr` starting at block `bs`
+// if `rescan` is true, otherwise, it adds `addr` to the list of addresses the
+// chain client watches for.
+func (w *Wallet) maybeRescanAddr(rescan bool, addr btcutil.Address,
+	bs waddrmgr.BlockStamp) error {
+
+	// Rescan blockchain for transactions with txout scripts paying to the
+	// imported address.
+	if rescan {
+		job := &RescanJob{
+			Addrs:      []btcutil.Address{addr},
+			OutPoints:  nil,
+			BlockStamp: bs,
+		}
+
+		// Submit rescan job.
+		return <-w.SubmitRescan(job)
+	}
+
+	err := w.chainClient.NotifyReceived([]btcutil.Address{addr})
+	if err != nil {
+		return fmt.Errorf("failed to subscribe for address ntfns for "+
+			"address %s: %w", addr.EncodeAddress(), err)
+	}
+
+	return nil
 }
