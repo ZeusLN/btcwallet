@@ -193,13 +193,14 @@ func testImportAccount(t *testing.T, w *Wallet, tc *testCase, watchOnly bool,
 
 	// Import the extended public keys into new accounts.
 	acct1, err := w.ImportAccount(
-		name+"1", acct1Pub, root.ParentFingerprint(), &tc.addrType,
+		name+"1", acct1Pub, root.ParentFingerprint(), &tc.addrType, nil,
 	)
 	require.NoError(t, err)
 	require.Equal(t, tc.expectedScope, acct1.KeyScope)
 
 	acct2, err := w.ImportAccount(
 		name+"2", acct2Pub, root.ParentFingerprint(), &tc.addrType,
+		nil,
 	)
 	require.NoError(t, err)
 	require.Equal(t, tc.expectedScope, acct2.KeyScope)

@@ -207,8 +207,8 @@ func (w *Wallet) validateExtendedPubKey(pubKey *hdkeychain.ExtendedKey,
 // pubkeys everywhere) and our own BIP-0049Plus address schema (nested
 // externally, witness internally).
 func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKey,
-	masterKeyFingerprint uint32, addrType *waddrmgr.AddressType) (
-	*waddrmgr.AccountProperties, error) {
+	masterKeyFingerprint uint32, addrType *waddrmgr.AddressType,
+	bs *waddrmgr.BlockStamp) (*waddrmgr.AccountProperties, error) {
 
 	var accountProps *waddrmgr.AccountProperties
 	err := walletdb.Update(w.db, func(tx walletdb.ReadWriteTx) error {
@@ -217,6 +217,12 @@ func (w *Wallet) ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKe
 		accountProps, err = w.importAccount(
 			ns, name, accountPubKey, masterKeyFingerprint, addrType,
 		)
+		if err != nil {
+			return err
+		}
+
+		_, err = w.maybeUpdateBirthdayBlock(ns, bs)
+
 		return err
 	})
 	return accountProps, err
