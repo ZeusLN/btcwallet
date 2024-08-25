@@ -390,7 +390,8 @@ func (w *Wallet) ImportAccountDryRun(name string,
 // intend to not support importing BIP-44 keys into the wallet using the legacy
 // pay-to-pubkey-hash (P2PKH) scheme.
 func (w *Wallet) ImportPublicKey(pubKey *btcec.PublicKey,
-	addrType waddrmgr.AddressType) error {
+	addrType waddrmgr.AddressType, bs *waddrmgr.BlockStamp,
+	rescan bool) error {
 
 	// Determine what key scope the public key should belong to and import
 	// it into the key scope's default imported account.
@@ -415,10 +416,19 @@ func (w *Wallet) ImportPublicKey(pubKey *btcec.PublicKey,
 	}
 
 	// TODO: Perform rescan if requested.
-	var addr waddrmgr.ManagedAddress
+	var (
+		addr          waddrmgr.ManagedAddress
+		birthdayBlock *waddrmgr.BlockStamp
+	)
 	err = walletdb.Update(w.db, func(tx walletdb.ReadWriteTx) error {
 		ns := tx.ReadWriteBucket(waddrmgrNamespaceKey)
 		addr, err = scopedKeyManager.ImportPublicKey(ns, pubKey, nil)
+		if err != nil {
+			return err
+		}
+
+		birthdayBlock, err = w.maybeUpdateBirthdayBlock(ns, bs)
+
 		return err
 	})
 	if err != nil {
@@ -427,10 +437,13 @@ func (w *Wallet) ImportPublicKey(pubKey *btcec.PublicKey,
 
 	log.Infof("Imported address %v", addr.Address())
 
-	err = w.chainClient.NotifyReceived([]btcutil.Address{addr.Address()})
+	if bs == nil {
+		bs = birthdayBlock
+	}
+
+	err = w.maybeRescanAddr(rescan, addr.Address(), *bs)
 	if err != nil {
-		return fmt.Errorf("unable to subscribe for address "+
-			"notifications: %w", err)
+		return err
 	}
 
 	return nil
