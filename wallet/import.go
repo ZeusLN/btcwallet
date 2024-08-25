@@ -536,27 +536,9 @@ func (w *Wallet) ImportPrivateKey(scope waddrmgr.KeyScope, wif *btcutil.WIF,
 			return err
 		}
 
-		// We'll only update our birthday with the new one if it is
-		// before our current one. Otherwise, if we do, we can
-		// potentially miss detecting relevant chain events that
-		// occurred between them while rescanning.
-		birthdayBlock, _, err := w.Manager.BirthdayBlock(addrmgrNs)
-		if err != nil {
-			return err
-		}
-		if bs.Height >= birthdayBlock.Height {
-			return nil
-		}
+		_, err = w.maybeUpdateBirthdayBlock(addrmgrNs, bs)
 
-		err = w.Manager.SetBirthday(addrmgrNs, bs.Timestamp)
-		if err != nil {
-			return err
-		}
-
-		// To ensure this birthday block is correct, we'll mark it as
-		// unverified to prompt a sanity check at the next restart to
-		// ensure it is correct as it was provided by the caller.
-		return w.Manager.SetBirthdayBlock(addrmgrNs, *bs, false)
+		return err
 	})
 	if err != nil {
 		return "", err
@@ -591,4 +573,36 @@ func (w *Wallet) ImportPrivateKey(scope waddrmgr.KeyScope, wif *btcutil.WIF,
 
 	// Return the payment address string of the imported private key.
 	return addrStr, nil
+}
+
+// maybeUpdateBirthdayBlock updates our birthday with the new one if it is
+// before our current one. If the birthday block is updated,
+// it is marked as unverified to prompt a sanity check at the next restart to
+// ensure the birthday block is correct. The function returns the birthday block
+// as well as any error.
+func (w *Wallet) maybeUpdateBirthdayBlock(
+	addrmgrNs walletdb.ReadWriteBucket,
+	bs *waddrmgr.BlockStamp) (*waddrmgr.BlockStamp, error) {
+
+	// Fetch the current birthday block and return early if the height of
+	// `bs` is not above it.
+	birthdayBlock, _, err := w.Manager.BirthdayBlock(addrmgrNs)
+	if err != nil {
+		return nil, err
+	}
+	if bs == nil || bs.Height >= birthdayBlock.Height {
+		return &birthdayBlock, nil
+	}
+
+	err = w.Manager.SetBirthday(addrmgrNs, bs.Timestamp)
+	if err != nil {
+		return &birthdayBlock, err
+	}
+
+	w.setClientBirthday(bs.Timestamp)
+
+	// To ensure this birthday block is correct, we'll mark it as
+	// unverified to prompt a sanity check at the next restart to
+	// ensure it is correct as it was provided by the caller.
+	return bs, w.Manager.SetBirthdayBlock(addrmgrNs, *bs, false)
 }
