@@ -4112,3 +4112,18 @@ func OpenWithRetry(db walletdb.DB, pubPass []byte, cbs *waddrmgr.OpenCallbacks,
 
 	return w, nil
 }
+
+// SetClientBirthday sets the birthday for the wallet's chain client.
+func (w *Wallet) SetClientBirthday() {
+	w.chainClientLock.Lock()
+	defer w.chainClientLock.Unlock()
+
+	// If the chain client is a NeutrinoClient instance, set a birthday so
+	// we don't download all the filters as we go.
+	switch cc := w.chainClient.(type) {
+	case *chain.NeutrinoClient:
+		cc.SetStartTime(w.Manager.Birthday())
+	case *chain.BitcoindClient:
+		cc.SetBirthday(w.Manager.Birthday())
+	}
+}
