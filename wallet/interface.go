@@ -121,6 +121,7 @@ type Interface interface {
 	// This creates a watch-only account.
 	ImportAccount(name string, accountPubKey *hdkeychain.ExtendedKey,
 		masterKeyFingerprint uint32, addrType *waddrmgr.AddressType,
+		bs *waddrmgr.BlockStamp,
 	) (*waddrmgr.AccountProperties, error)
 
 	// ImportAccountDryRun imports an account backed by an extended public
@@ -164,7 +165,8 @@ type Interface interface {
 
 	// ImportPublicKey imports a public key as a watch-only address.
 	ImportPublicKey(pubKey *btcec.PublicKey,
-		addrType waddrmgr.AddressType) error
+		addrType waddrmgr.AddressType, bs *waddrmgr.BlockStamp,
+		rescan bool) error
 
 	// ImportTaprootScript imports a taproot script into the wallet.
 	ImportTaprootScript(scope waddrmgr.KeyScope,
@@ -317,6 +319,9 @@ type Interface interface {
 	// script for a given UTXO.
 	ScriptForOutput(output *wire.TxOut) (waddrmgr.ManagedPubKeyAddress,
 		[]byte, []byte, error)
+
+	// SubmitRescan submits a rescan job to the wallet's rescan manager.
+	SubmitRescan(job *RescanJob) <-chan error
 }
 
 // A compile time check to ensure that Wallet implements the interface.
